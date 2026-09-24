@@ -148,6 +148,9 @@ textarea{width:100%;min-height:84px;border:1px solid var(--line);border-radius:8
 .markbtn.shake{animation:shake .42s ease}
 @keyframes shake{0%,100%{transform:none}20%{transform:translateX(-4px) rotate(-8deg)}40%{transform:translateX(4px) rotate(7deg)}60%{transform:translateX(-3px) rotate(-4deg)}80%{transform:translateX(2px) rotate(2deg)}}
 @media (prefers-reduced-motion:reduce){.markbtn.shake{animation:none}}
+.savesleep{width:100%}
+.savesleep.saved{background:var(--good);border-color:var(--good);color:#fff;opacity:1;cursor:default}
+.savesleep:disabled{cursor:default}
 .checkin{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .checkin label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
 .checkin input,.checkin select{min-width:0;width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
@@ -786,6 +789,7 @@ function viewToday(){
       <label for="sQ" style="${showWaist?"":"grid-column:1/-1"}">Sleep quality<select id="sQ">${["","1 · Awful","2 · Poor","3 · OK","4 · Good","5 · Great"].map((o,i)=>`<option value="${i||""}" ${String(sl.q||"")===String(i||"")?"selected":""}>${o||"Rate it"}</option>`).join("")}</select></label>
       ${showWaist ? `<label for="waist">Waist at navel (in)<input id="waist" type="number" inputmode="decimal" step="0.25" placeholder="in" value="${esc(d.waist??"")}"></label>` : ""}
     </div>
+    <button class="btn savesleep ${hrs!=null?"saved":""}" data-save-sleep ${hrs!=null?"disabled":""}>${hrs!=null?`✓ Sleep saved · ${fmtH(hrs)}`:"Save sleep"}</button>
     <div class="mark-row">
       <span class="label" style="margin:0">Personal</span>
       <div class="row" style="gap:6px">
@@ -1334,6 +1338,11 @@ function haptic(strong){
 let shakeMark = null;
 let pendingRestore = null;
 
+function markSleepEdited(){
+  const b = document.querySelector("[data-save-sleep]"); if (!b) return;
+  b.disabled = false; b.classList.remove("saved"); b.textContent = "Save sleep";
+}
+
 /* ---------- events ---------- */
 const ORDER = ["today","school","plan","fuel","water","glow","bible","progress"];
 function goTab(next){
@@ -1387,6 +1396,13 @@ app.addEventListener("click", e=>{
   if (e.target.closest("[data-restore-no]")) { pendingRestore = null; render(); return; }
   const gs = e.target.closest("[data-glow]");
   if (gs) { glowSec = gs.dataset.glow; try{ localStorage.setItem(LS_KEY+":glow",glowSec); }catch(err){} render(); return; }
+  if (e.target.closest("[data-save-sleep]")) {
+    const bed = $("#sBed").value, wake = $("#sWake").value, q = $("#sQ").value;
+    if (!bed || !wake) { toast("Set both bedtime and wake time"); return; }
+    if(!days[viewDate]) days[viewDate]=emptyDay();
+    days[viewDate].sleep = {bed, wake, q: q ? +q : null};
+    haptic(true); saveDay(viewDate); render(); toast(`Sleep logged: ${fmtH(sleepHours(viewDate))}`); return;
+  }
   const mk = e.target.closest("[data-mark]");
   if (mk) { haptic(mk.dataset.mark==="n"); shakeMark = mk.dataset.mark; if(!days[viewDate]) days[viewDate]=emptyDay(); const v=mk.dataset.mark; days[viewDate].mark = days[viewDate].mark===v ? null : v; saveDay(viewDate); render(); return; }
   const bb = e.target.closest("[data-bottle]");
@@ -1400,12 +1416,9 @@ app.addEventListener("change", e=>{
   const t = e.target;
   if (t.dataset.task) { haptic(t.checked); if(!days[viewDate]) days[viewDate]=emptyDay(); days[viewDate].tasks[t.dataset.task]=t.checked; saveDay(viewDate); render(); return; }
   if (t.id==="waist") { haptic(); if(!days[viewDate]) days[viewDate]=emptyDay(); const v=parseFloat(t.value); days[viewDate].waist = isNaN(v)?null:v; saveDay(viewDate); render(); return; }
-  if (t.id==="sBed" || t.id==="sWake" || t.id==="sQ") { haptic();
-    if(!days[viewDate]) days[viewDate]=emptyDay();
-    const s = {...(days[viewDate].sleep||{})};
-    if (t.id==="sBed") s.bed = t.value; else if (t.id==="sWake") s.wake = t.value; else s.q = t.value ? +t.value : null;
-    days[viewDate].sleep = s; saveDay(viewDate); render(); return;
-  }
+  // Time wheels fire "change" on every stop, so only flag the edit here.
+  // Nothing saves until "Save sleep" is tapped.
+  if (t.id==="sBed" || t.id==="sWake" || t.id==="sQ") { markSleepEdited(); return; }
   if (t.id==="restoreFile" && t.files && t.files[0]) {
     t.files[0].text().then(txt=>{ try { const b = JSON.parse(txt); if (b.app!=="the-climb" || !b.days) throw 0; pendingRestore = b; render(); }
       catch(err){ toast("That file isn't a Climb backup"); } });
