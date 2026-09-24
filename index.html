@@ -277,8 +277,10 @@ const SESSIONS = {
     ["Hammer curl","3 × 12","To failure on the last set"],
     ["Face pull","2 × 20",""],
     ["Neck extension, plate behind head (face down on bench)","2 × 15","5–10 lb to start. Slow, no jerking"]]},
-  z2mob:{name:"Zone 2 + Mobility",min:45,ex:[
-    ["Bike or rower, easy","30 min","HR 120–140"],
+  engine:{name:"Engine + Mobility",min:50,ex:[
+    ["Easy warm-up, bike or rower","8 min","Build gradually"],
+    ["4 × 4 min hard-but-steady","3 min easy between","RPE 7–8: you can say a few words, not sentences. Same pace every round"],
+    ["Easy cool-down","5 min",""],
     ["Couch stretch","2 × 60 s / side",""],
     ["90/90 hip switches","2 × 10",""],
     ["Thoracic open books","2 × 10 / side",""],
@@ -306,8 +308,8 @@ const WEEK = [
   {cls:false,pm:"rest",at:"Any time",bed:21*60,why:"Class tomorrow at 5:30."},
   {cls:true,pm:"upperA",at:"3:45 PM, after school",eve:"7:57 PM commitment",bed:22*60+30,why:"Late night. No class tomorrow, so sleep in until 7:00."},
   {cls:false,pm:"lowerCore",at:"3:45 PM, after school",eve:"7:00 PM commitment",bed:21*60+45,why:"Class tomorrow at 5:30. Head straight to bed when you get home.",wake:"Sleep in until 7:00. No class after Monday's late night."},
-  {cls:true,pm:"upperB",at:"3:45 PM, after school",bed:21*60,why:"Class tomorrow at 5:30."},
-  {cls:true,pm:"z2mob",at:"3:45 PM, after school",eve:"7:00 PM commitment",bed:21*60+45,why:"Class tomorrow at 5:30. Head straight to bed when you get home."},
+  {cls:true,pm:"upperB",at:"3:45 PM, after school",bed:21*60+30,why:"No class tomorrow, but keep your rhythm."},
+  {cls:false,pm:"engine",at:"3:45 PM, after school",eve:"7:00 PM commitment",bed:21*60+45,why:"Class tomorrow at 5:30. Head straight to bed when you get home.",wake:"No class today. Sleep in until school."},
   {cls:true,pm:"pump",at:"3:45 PM, after school",bed:22*60,why:"No class tomorrow, but keep your rhythm."},
   {cls:false,pm:"long",at:"Morning",bed:21*60+30,why:"Keep the weekend close to your school-week schedule."}
 ];
@@ -429,7 +431,7 @@ function phaseOf(date){ const w=weekNo(date); return PHASES[w<=4?0:w<=8?1:2]; }
 function sessionMin(k, ph){
   if (k==="long") return ph.long;
   if (k==="lowerCore") return SESSIONS.lowerCore.min + (ph.n-1)*5;
-  if (k==="z2mob") return ph.z2+15;
+  if (k==="engine") return SESSIONS.engine.min;
   if (k==="rest") return SESSIONS.rest.min;
   return SESSIONS[k].min + (ph.n===3?10:ph.n===2?6:0);
 }
@@ -1091,7 +1093,7 @@ function viewPlan(){
         <div class="spread"><span class="label">${p.weeks}</span>${p.n===ph.n?`<span class="chip auto" style="margin:0">${dl?"Deload week":"You are here"}</span>`:""}</div>
         <h3>Phase ${p.n} · ${p.name}</h3>
         <p style="font-size:14px">${esc(p.rule)}${p.finisher?` ${esc(p.finisher)} on lift days.`:""}</p>
-        <p class="muted" style="font-size:13px">Zone 2 ${p.z2+10}–${p.z2+15} min · Saturday ${p.long} min · ${(settings.stepBase+p.steps).toLocaleString()} steps</p>
+        <p class="muted" style="font-size:13px">Saturday Zone 2 ${p.long} min · ${(settings.stepBase+p.steps).toLocaleString()} steps</p>
         <p style="font-size:13px"><b>What you'll see:</b> ${esc(p.result)}</p>
       </div>`).join("")}</div>
     <p class="muted" style="font-size:13px">Weeks 4 and 8 are deloads: half the PM sets, no finishers, class at 80%. They're what let you push hard again in the next phase. Benchmarks on the Saturdays of weeks 1, 6, and 12. Realistic target: about 18–25 lb of fat gone and a waist 4–6 inches smaller, with more muscle showing than you have now.</p>
@@ -1118,7 +1120,8 @@ function viewPlan(){
       <li><b>Class:</b> go all out on the metcon. Pick loads that let you move steadily for the whole thing, not ones that make you stop after round 2.</li>
       <li><b>PM lifts:</b> 1–2 reps in reserve on compound lifts (presses, rows, pull-ups, RDLs, split squats). Take isolation moves (raises, curls, pushdowns, flys) to true failure. Add a rep or 5 lb every week. If you do the same weight for the same reps two weeks running, you're not pushing hard enough.</li>
       <li><b>Where the line is:</b> never grind a heavy press or RDL to failure without a spotter, and stop any set the moment your form breaks. Failure on a curl builds muscle; failure on an RDL builds a back injury.</li>
-      <li><b>Tuesday legs:</b> it's the one day with no morning class, so it's the one day your legs are fresh. CrossFit covers speed and conditioning; this covers size and strength. Keep 2 reps in reserve because Wednesday's class is next.</li>
+      <li><b>Tuesday legs:</b> no morning class, so your legs are fresh. CrossFit covers speed and conditioning; this covers size and strength. Keep 2 reps in reserve because Wednesday's class is next.</li>
+      <li><b>Thursday engine:</b> it replaces the conditioning of a fourth class. Each 4-minute round should feel hard but steady, the same pace every round. If round 4 is much slower than round 1, you started too fast.</li>
       <li><b>Finishers:</b> start in Phase 2 on Upper A, Upper B, and Delts, Arms & Carries days. All-out means all-out for 20 seconds, then truly easy for 40.</li>
       <li><b>Zone 2:</b> you should be able to talk in full sentences. It burns fat without eating into recovery. Going harder here is how people burn out.</li>
       <li><b>Joints first at 250 lb:</b> run less, row and bike more. Knee or back pain means scale the movement, not skip the day.</li>
